@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,13 +20,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Run lint (if available)
+        run: npm run lint --if-present
 
       - name: Run build
         run: npm run build --if-present
 
       - name: Run tests
-        run: npm test || true
+        run: npm test
