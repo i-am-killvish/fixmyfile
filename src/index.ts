@@ -6,8 +6,16 @@ import path from "path";
 
 const filePath = process.argv[2];
 
-if (!filePath) {
-  console.error("❌ Please provide a file path");
+if (!filePath || filePath === "--help") {
+  console.log(`
+fixmyfile 🚀
+
+Usage:
+  fixmyfile <file>
+
+Example:
+  fixmyfile error.ts
+`);
   process.exit(1);
 }
 
