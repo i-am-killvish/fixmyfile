@@ -79,3 +79,7 @@ This project is actively evolving with improvements planned around performance, 
 ## 📄 License
 
 MIT
+
+## 🔗 Repository
+
+https://github.com/your-username/fixmyfile
