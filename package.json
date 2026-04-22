@@ -1,28 +1,36 @@
 {
   "name": "fixmyfile",
-  "version": "1.0.2",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && npm link"
+  "version": "1.0.5",
+  "main": "dist/index.js",
+  "bin": {
+    "fixmyfile": "dist/index.js"
   },
-  "keywords": [],
+  "scripts": {
+    "build": "tsc"
+  },
+  "description": "CLI tool to automatically fix TypeScript errors using compiler diagnostics and AST transformations",
+  "keywords": [
+    "typescript",
+    "cli",
+    "ast",
+    "code-fix",
+    "developer-tools"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
   "dependencies": {
-    "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "^25.6.0"
   },
-  "bin": {
-    "fixmyfile": "dist/index.js"
-  },
   "files": [
     "dist",
     "README.md",
     "examples"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/i-am-killvish/fixmyfile.git"
+  }
 }
