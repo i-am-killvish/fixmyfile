@@ -1,5 +1,6 @@
 # fixmyfile 🚀
 
+![demo](./assets/fixmyfile-demo.gif)
 Fix TypeScript errors automatically from the command line.
 
 ---
