@@ -2,8 +2,8 @@ function greet(name: string) {
     console.log(name);
 }
 greet("text"); // missing args
-let num: number = 123; // type error
-// unknownFunction(); // undefined
+let num: number = 123; // type mismatch
+// unknownFunction(); // undefined symbol
 type User = {
     name: string;
 };
