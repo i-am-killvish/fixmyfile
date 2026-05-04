@@ -4,13 +4,15 @@
 
 <img src="./assets/fixmyfile-demo.gif" width="700" />
 
-Fix TypeScript errors automatically from the command line.
+Fix recurring TypeScript workflow friction automatically.
 
 ---
 
 ## ✨ What it does
 
-`fixmyfile` detects TypeScript errors and applies automatic fixes using compiler diagnostics and AST transformations.
+`fixmyfile` detects common TypeScript friction points and applies automatic fixes using compiler diagnostics and AST transformations.
+
+It focuses on repetitive issues that slow developers down during everyday TypeScript development.
 
 ---
 
@@ -19,18 +21,35 @@ Fix TypeScript errors automatically from the command line.
 ### ❌ Before
 
 ```ts
-function greet(name: string) {
-  console.log(name);
-}
+const values = [1, 2, undefined, 4].filter(Boolean);
 
-greet();
+const doubled = values.map((v) => v * 2);
+```
+
+TypeScript may still complain that:
+
+```txt
+'v' is possibly 'undefined'
 ```
 
 ### ✅ After
 
 ```ts
-greet("text");
+const values = [1, 2, undefined, 4].filter((x): x is NonNullable<typeof x> =>
+  Boolean(x),
+);
+
+const doubled = values.map((v) => v * 2);
 ```
+
+---
+
+## ✨ Current Fixes
+
+- Fix missing function arguments (`TS2554`)
+- Fix simple type mismatches (`TS2322`)
+- Handle undefined symbol errors (`TS2304`)
+- Improve `.filter(Boolean)` type narrowing automatically
 
 ---
 
@@ -40,11 +59,9 @@ greet("text");
 fixmyfile <file>
 ```
 
-Example:
+## 📁 Examples
 
-```bash
-fixmyfile error.ts
-```
+See the `examples/` folder for sample files and transformations.
 
 ---
 
@@ -64,13 +81,22 @@ See the `examples/` folder for sample files.
 
 ## 🚧 Scope
 
-This tool focuses on fixing common TypeScript errors in a single file.
+`fixmyfile` currently focuses on:
+
+- common TypeScript workflow friction
+- repetitive compiler issues
+- safe AST-based transformations
+- single-file automatic fixes
+
+The project intentionally prioritizes predictable and reliable transformations over aggressive code mutation.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome. Please open an issue first to discuss any major changes.
+Contributions, issue reports, and TypeScript pain-point discussions are welcome.
+
+Please open an issue before major changes.
 
 ---
 
