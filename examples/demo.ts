@@ -13,3 +13,4 @@ const users: (User | undefined)[] = [
 ];
 const validUsers = users.filter((x): x is NonNullable<typeof x> => Boolean(x));
 validUsers.map((u) => u.name);
+

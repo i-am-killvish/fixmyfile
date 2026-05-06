@@ -6,6 +6,8 @@ import path from "path";
 
 const filePath = process.argv[2];
 
+const isDryRun = process.argv.includes("--dry-run");
+
 if (!filePath || filePath === "--help") {
   console.log(`
 fixmyfile 🚀
@@ -28,11 +30,18 @@ if (!fs.existsSync(fullPath)) {
 
 console.log("🔍 Checking for TypeScript errors...\n");
 
+if (isDryRun) {
+  console.log("🧪 Running in DRY RUN mode (no files will be modified)\n");
+}
+
 let content = fs.readFileSync(fullPath, "utf-8");
 
 let maxIterations = 10;
 let hasFixes = true;
 let previousContent = "";
+
+let totalFixes = 0;
+let totalSkipped = 0;
 
 // 🧠 Fix registry (ONLY for line-based fixes)
 const lineFixers: Record<number, Function> = {
@@ -76,22 +85,32 @@ while (hasFixes && maxIterations > 0) {
     console.log("⚡ Fixing .filter(Boolean) narrowing...");
 
     content = updatedFilterContent;
-    fs.writeFileSync(fullPath, content);
+    if (!isDryRun) {
+      fs.writeFileSync(fullPath, content);
+    }
 
     hasFixes = true;
     usedASTFix = true;
+    totalFixes++;
   }
 
   if (has2554) {
-    console.log("⚡ Running AST fix for TS2554...");
+    console.log(
+      isDryRun
+        ? "🧪 Would apply AST transformation for TS2554"
+        : "✓ Applied AST transformation for TS2554"
+    );
 
     const updatedContent = fixMissingArgsAST(fullPath);
 
     if (updatedContent !== content) {
       content = updatedContent;
-      fs.writeFileSync(fullPath, content);
+      if (!isDryRun) {
+        fs.writeFileSync(fullPath, content);
+      }
       hasFixes = true;
       usedASTFix = true;
+      totalFixes++;
     }
   }
 
@@ -103,34 +122,61 @@ while (hasFixes && maxIterations > 0) {
       const code = diag.code;
       const file = diag.file;
 
-      if (!file || !lineFixers[code]) return;
+      if (!file) return;
+
+      if (!lineFixers[code]) {
+        console.log(`⚠ No safe fix available for TS${code}`);
+        totalSkipped++;
+        return;
+      }
 
       const { line } = file.getLineAndCharacterOfPosition(diag.start || 0);
 
-      console.log(`⚡ Fixing TS${code} at line ${line + 1}`);
+      console.log(
+        `${isDryRun ? "🧪 Would fix" : "✓ Fixed"} TS${code} at line ${line + 1}`
+      );
+
+      if (isDryRun) {
+        totalFixes++;
+      }
 
       const updatedLine = lineFixers[code](lines[line]);
 
       if (updatedLine !== lines[line]) {
         lines[line] = updatedLine;
         hasFixes = true;
+        totalFixes++;
       }
     });
 
     if (hasFixes) {
       content = lines.join("\n");
+      if (!isDryRun) {
       fs.writeFileSync(fullPath, content);
+    }
     }
   }
 }
 
 // Final write
-fs.writeFileSync(fullPath, content);
+if (!isDryRun) {
+      fs.writeFileSync(fullPath, content);
+    }
+
+
+console.log("\n📊 Summary");
+console.log(`✓ Fixes applied: ${totalFixes}`);
+console.log(`⚠ Skipped diagnostics: ${totalSkipped}`);
+
 
 if (maxIterations === 0) {
   console.log("⚠️ Stopped due to too many iterations");
 } else {
-  console.log("✅ File updated successfully");
+  console.log(
+    isDryRun
+      ? "🧪 Dry run complete (no changes written)"
+      : "✅ File updated successfully"
+  );
 }
 
 //
