@@ -4,13 +4,14 @@ function greet(name: string) {
 greet("text"); // missing args
 let num: number = 123; // type mismatch
 // unknownFunction(); // undefined symbol
-type User = {
-    name: string;
-};
 const users: (User | undefined)[] = [
     { name: "John" },
     undefined,
 ];
 const validUsers = users.filter((x): x is NonNullable<typeof x> => Boolean(x));
 validUsers.map((u) => u.name);
-
+type User = {
+    name: string;
+};
+declare const user: User | undefined;
+console.log(user?.name);

@@ -79,6 +79,8 @@ while (hasFixes && maxIterations > 0) {
   // 🔥 STEP 1: Run AST fix ONCE per iteration if TS2554 exists
   const has2554 = diagnostics.some((d) => d.code === 2554);
 
+  const has18048 = diagnostics.some((d) => d.code === 18048);
+
   const updatedFilterContent = fixFilterBooleanNarrowing(fullPath);
 
   if (updatedFilterContent !== content) {
@@ -112,6 +114,28 @@ while (hasFixes && maxIterations > 0) {
       usedASTFix = true;
       totalFixes++;
     }
+  }
+
+  if (has18048) {
+  console.log(
+    isDryRun
+      ? "🧪 Would apply optional chaining fix for TS18048"
+      : "✓ Applied optional chaining fix for TS18048"
+  );
+
+  const updatedContent = fixPossiblyUndefinedAccess(fullPath);
+
+  if (updatedContent !== content) {
+    content = updatedContent;
+
+    if (!isDryRun) {
+      fs.writeFileSync(fullPath, content);
+    }
+
+    hasFixes = true;
+    usedASTFix = true;
+    totalFixes++;
+  }
   }
 
   // 🔥 STEP 2: Line-based fixes (only if AST didn't run)
@@ -323,6 +347,115 @@ function fixFilterBooleanNarrowing(filePath: string): string {
       return ts.visitNode(rootNode, visit) as ts.SourceFile;
     };
   };
+
+  const result = ts.transform(sourceFile, [transformer]);
+
+  const printer = ts.createPrinter();
+
+  const newContent = printer.printFile(result.transformed[0]);
+
+  result.dispose();
+
+  return newContent;
+}
+
+function fixPossiblyUndefinedAccess(filePath: string): string {
+  const source = fs.readFileSync(filePath, "utf-8");
+
+  const program = ts.createProgram([filePath], {
+    noEmit: true,
+    strict: true,
+  });
+
+  const sourceFile = program.getSourceFile(filePath);
+
+  if (!sourceFile) return source;
+
+  const diagnostics = ts
+    .getPreEmitDiagnostics(program)
+    .filter((d) => d.code === 18048);
+
+  const positions = new Set<number>();
+
+  diagnostics.forEach((d) => {
+    if (typeof d.start === "number") {
+      positions.add(d.start);
+    }
+  });
+
+  const transformer: ts.TransformerFactory<ts.SourceFile> =
+    (context) => {
+      return (rootNode) => {
+        function visit(node: ts.Node): ts.Node {
+          // Property access: user.name
+          if (ts.isPropertyAccessExpression(node)) {
+            const start = node.getStart();
+
+            if (positions.has(start)) {
+              // skip already optional
+              if (node.questionDotToken) {
+                return node;
+              }
+
+              // skip assignments
+              if (
+                ts.isBinaryExpression(node.parent) &&
+                node.parent.left === node
+              ) {
+                return node;
+              }
+
+              // skip non-null assertions
+              if (ts.isNonNullExpression(node.expression)) {
+                return node;
+              }
+
+              return ts.factory.createPropertyAccessChain(
+                node.expression,
+                ts.factory.createToken(
+                  ts.SyntaxKind.QuestionDotToken
+                ),
+                node.name
+              );
+            }
+          }
+
+          // Element access: user["name"]
+          if (ts.isElementAccessExpression(node)) {
+            const start = node.getStart();
+
+            if (positions.has(start)) {
+              if (node.questionDotToken) {
+                return node;
+              }
+
+              if (
+                ts.isBinaryExpression(node.parent) &&
+                node.parent.left === node
+              ) {
+                return node;
+              }
+
+              if (ts.isNonNullExpression(node.expression)) {
+                return node;
+              }
+
+              return ts.factory.createElementAccessChain(
+                node.expression,
+                ts.factory.createToken(
+                  ts.SyntaxKind.QuestionDotToken
+                ),
+                node.argumentExpression
+              );
+            }
+          }
+
+          return ts.visitEachChild(node, visit, context);
+        }
+
+        return ts.visitNode(rootNode, visit) as ts.SourceFile;
+      };
+    };
 
   const result = ts.transform(sourceFile, [transformer]);
 
