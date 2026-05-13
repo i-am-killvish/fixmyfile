@@ -50,6 +50,7 @@ const doubled = values.map((v) => v * 2);
 - Fix simple type mismatches (`TS2322`)
 - Handle undefined symbol errors (`TS2304`)
 - Improve `.filter(Boolean)` type narrowing automatically
+- Add optional chaining for possibly undefined access (`TS18048`)
 
 ---
 
