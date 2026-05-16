@@ -1,0 +1,1 @@
+export type LineFixer = (line: string) => string;
